@@ -139,29 +139,32 @@
 
 
         .loading-screen {
-            position: absolute;
+            position: fixed;
             inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.88);
-            z-index: 5;
+            display: grid;
+            place-items: center;
+            background: rgba(12, 16, 24, 0.55);
+            z-index: 999;
             font-family: "Courier New", Courier, monospace;
-            letter-spacing: 0.08em;
             text-transform: uppercase;
         }
 
-        .loading-box {
+        .loading-panel {
             display: grid;
-            gap: 12px;
-            min-width: min(80%, 320px);
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            min-width: min(84%, 360px);
             color: #1f3a5f;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
+            letter-spacing: 0.1em;
             text-align: center;
         }
 
-        .loading-row {
+        .loading-track {
             display: grid;
             grid-template-columns: 1fr auto;
             gap: 10px;
@@ -169,16 +172,16 @@
         }
 
         .loading-bar {
-            height: 10px;
+            height: 8px;
             border-radius: 999px;
-            background: rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.12);
             overflow: hidden;
         }
 
         .loading-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #1f3a5f 0%, #6dd6ff 100%);
+            background: linear-gradient(90deg, #1f3a5f 0%, #58c7ff 100%);
             transition: width 0.2s ease;
         }
 
@@ -186,7 +189,7 @@
             font-size: 12px;
             font-weight: 700;
             color: #1f3a5f;
-            min-width: 48px;
+            min-width: 52px;
             text-align: right;
         }
 
@@ -320,6 +323,18 @@
     </style>
 </head>
 <body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-panel">
+            <div>LOADING...</div>
+            <div class="loading-track">
+                <div class="loading-bar">
+                    <div class="loading-bar-fill" id="loadingBar"></div>
+                </div>
+                <div class="loading-percent" id="loadingPercent">0%</div>
+            </div>
+        </div>
+    </div>
+
     <main class="shell">
         <div class="topbar">
             <div>
@@ -334,19 +349,6 @@
         </div>
 
         <div class="game-frame">
-
-            <div class="loading-screen" id="loadingScreen">
-                <div class="loading-box">
-                    <div>LOADING...</div>
-                    <div class="loading-row">
-                        <div class="loading-bar">
-                            <div class="loading-bar-fill" id="loadingBar"></div>
-                        </div>
-                        <div class="loading-percent" id="loadingPercent">0%</div>
-                    </div>
-                </div>
-            </div>
->>>>>>> c5145df (Game khung long PHULON)
             <div class="cheat-panel" id="cheatPanel">
                 <div class="cheat-row">
                     <input type="checkbox" id="cheatGod">
@@ -396,6 +398,8 @@
         const ctx = canvas.getContext("2d");
         const runnerImage = new Image();
         runnerImage.src = "IMG_20260326_142958.jpg";
+        const backgroundPreload = new Image();
+        backgroundPreload.src = "siuuu.png";
 
         const WIDTH = canvas.width;
         const HEIGHT = canvas.height;
@@ -450,15 +454,35 @@
         const loadingScreen = document.getElementById("loadingScreen");
         const loadingBar = document.getElementById("loadingBar");
         const loadingPercent = document.getElementById("loadingPercent");
+        let loadingDone = false;
+
+        function hideLoading() {
+            if (loadingScreen && loadingScreen.style.display !== "none") {
+                loadingScreen.style.display = "none";
+            }
+        }
 
         function setLoadingProgress(value) {
             const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
-            loadingBar.style.width = percent + "%";
-            loadingPercent.textContent = percent + "%";
+            if (loadingBar) {
+                loadingBar.style.width = percent + "%";
+            }
+            if (loadingPercent) {
+                loadingPercent.textContent = percent + "%";
+            }
+        }
+
+        function loadWithTimeout(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise((resolve) => {
+                    setTimeout(resolve, ms);
+                })
+            ]);
         }
 
         function loadImage(image) {
-            return new Promise((resolve) => {
+            return loadWithTimeout(new Promise((resolve) => {
                 if (image.complete && image.naturalWidth > 0) {
                     resolve();
                     return;
@@ -466,11 +490,11 @@
                 const done = () => resolve();
                 image.addEventListener("load", done, { once: true });
                 image.addEventListener("error", done, { once: true });
-            });
+            }), 2000);
         }
 
         function loadAudio(audio) {
-            return new Promise((resolve) => {
+            return loadWithTimeout(new Promise((resolve) => {
                 if (audio.readyState >= 2) {
                     resolve();
                     return;
@@ -479,7 +503,7 @@
                 audio.addEventListener("canplaythrough", done, { once: true });
                 audio.addEventListener("loadeddata", done, { once: true });
                 audio.addEventListener("error", done, { once: true });
-            });
+            }), 2000);
         }
 
         async function preloadAssets() {
@@ -491,14 +515,25 @@
             ];
             let loaded = 0;
             setLoadingProgress(0);
-            await Promise.all(
-                assets.map(async (asset) => {
-                    await asset;
-                    loaded += 1;
-                    setLoadingProgress(loaded / assets.length);
-                })
-            );
-            loadingScreen.style.display = "none";
+            const fallbackTimer = setTimeout(() => {
+                loadingDone = true;
+                setLoadingProgress(1);
+                hideLoading();
+            }, 2500);
+            try {
+                await Promise.all(
+                    assets.map(async (asset) => {
+                        await asset;
+                        loaded += 1;
+                        setLoadingProgress(loaded / assets.length);
+                    })
+                );
+            } finally {
+                clearTimeout(fallbackTimer);
+                loadingDone = true;
+                setLoadingProgress(1);
+                hideLoading();
+            }
         }
 
 
@@ -867,6 +902,12 @@
         }
 
         function startGame() {
+            if (state.playing && !state.gameOver) {
+                return;
+            }
+            if (!loadingDone) {
+                return;
+            }
             const wasGameOver = state.gameOver;
             if (state.gameOver) {
                 resetGame();
@@ -966,6 +1007,10 @@
 
             if (state.flashTimer > 0) {
                 state.flashTimer -= 1;
+            }
+
+            if (loadingDone) {
+                hideLoading();
             }
 
             drawScene();
@@ -1087,6 +1132,7 @@
         });
 
 
+        preloadAssets();
         applyCheatsFromUI();
         updateMusicToggle();
         resetGame();
