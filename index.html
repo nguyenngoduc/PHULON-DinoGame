@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game khủng long, PHULON Edition</title>
+    <style>
+        :root {
+            --bg: #f6f6f6;
+            --panel: #ffffff;
+            --ink: #535353;
+            --muted: #9b9b9b;
+            --line: #d9d9d9;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top, #ffffff 0%, #f8f8f8 40%, #ececec 100%);
+            color: var(--ink);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image: url("siuuu.png");
+            background-repeat: repeat;
+            opacity: 0.12;
+            will-change: transform;
+        }
+
+        body::before {
+            background-size: 140px auto;
+            animation: snowFall 28s linear infinite;
+        }
+
+        body::after {
+            background-size: 90px auto;
+            opacity: 0.08;
+            animation: snowFall 18s linear infinite;
+        }
+
+        @keyframes snowFall {
+            from { transform: translate3d(0, -120px, 0); }
+            to { transform: translate3d(0, 120px, 0); }
+        }
+
+        .shell {
+            width: min(94vw, 760px);
+            padding: 18px 18px 14px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.88);
+            box-shadow: 0 28px 70px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(14px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cheat-toggle {
+            border: 1px solid var(--line);
+            background: #ffffff;
+            color: #25314f;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .cheat-toggle:hover {
+            background: #f4f6fb;
+        }
+
+        .music-toggle {
+            border: 1px solid var(--line);
+            background: #ffffff;
+            color: #25314f;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .music-toggle:hover {
+            background: #f4f6fb;
+        }
+        .title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .game-frame {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            overflow: hidden;
+            background: #dfe7f2 url("siuuu.png") center center / cover no-repeat;
+            width: 100%;
+            aspect-ratio: 900 / 260;
+        }
+
+
+        .loading-screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.88);
+            z-index: 5;
+            font-family: "Courier New", Courier, monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .loading-box {
+            display: grid;
+            gap: 12px;
+            min-width: min(80%, 320px);
+            color: #1f3a5f;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .loading-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .loading-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1f3a5f 0%, #6dd6ff 100%);
+            transition: width 0.2s ease;
+        }
+
+        .loading-percent {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1f3a5f;
+            min-width: 48px;
+            text-align: right;
+        }
+
+        .cheat-panel {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            font-size: 12px;
+            color: #25314f;
+            display: none;
+            min-width: 220px;
+        }
+
+        .cheat-panel.active {
+            display: grid;
+            gap: 8px;
+        }
+
+        .cheat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cheat-row label {
+            cursor: pointer;
+        }
+
+        .cheat-row select {
+            margin-left: auto;
+            border-radius: 8px;
+            padding: 4px 6px;
+            border: 1px solid var(--line);
+            background: #ffffff;
+            font-size: 12px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .hud {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .hud strong {
+            color: var(--ink);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .shell {
+                padding: 12px;
+                border-radius: 18px;
+            }
+
+            .topbar,
+            .hud {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .topbar-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .cheat-panel {
+                left: 8px;
+                right: 8px;
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 520px) and (orientation: portrait) {
+            body {
+                padding: 10px;
+            }
+
+            .shell {
+                width: 100%;
+                padding: 12px;
+                border-radius: 18px;
+            }
+
+            .title {
+                font-size: 12px;
+                letter-spacing: 0.05em;
+            }
+
+            .meta {
+                font-size: 11px;
+            }
+
+            .topbar-actions {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 8px;
+            }
+
+            .music-toggle,
+            .cheat-toggle {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::before,
+            body::after {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <div class="topbar">
+            <div>
+                <div class="title">Game khủng long, PHULON Edition</div>
+                <div class="meta">Game cho PHULON, siuuu</div>
+            </div>
+            <div class="topbar-actions">
+                <div class="meta">Nhảy: Space / ↑, Chơi lại: Enter</div>
+                <button class="music-toggle" id="musicToggle">Nhạc: Bật</button>
+                <button class="cheat-toggle" id="cheatToggle">Cheat</button>
+            </div>
+        </div>
+
+        <div class="game-frame">
+
+            <div class="loading-screen" id="loadingScreen">
+                <div class="loading-box">
+                    <div>LOADING...</div>
+                    <div class="loading-row">
+                        <div class="loading-bar">
+                            <div class="loading-bar-fill" id="loadingBar"></div>
+                        </div>
+                        <div class="loading-percent" id="loadingPercent">0%</div>
+                    </div>
+                </div>
+            </div>
+>>>>>>> c5145df (Game khung long PHULON)
+            <div class="cheat-panel" id="cheatPanel">
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatGod">
+                    <label for="cheatGod">Bất tử</label>
+                </div>
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatFreeze">
+                    <label for="cheatFreeze">Đóng băng chướng ngại</label>
+                </div>
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatAuto">
+                    <label for="cheatAuto">Auto nhảy</label>
+                </div>
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatSlow">
+                    <label for="cheatSlow">Slow motion</label>
+                </div>
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatFast">
+                    <label for="cheatFast">Tăng tốc</label>
+                </div>
+                <div class="cheat-row">
+                    <input type="checkbox" id="cheatJump">
+                    <label for="cheatJump">Nhảy cao</label>
+                </div>
+                <div class="cheat-row">
+                    <label for="cheatTheme">Chế độ</label>
+                    <select id="cheatTheme">
+                        <option value="auto">Auto</option>
+                        <option value="day">Ngày</option>
+                        <option value="night">Đêm</option>
+                    </select>
+                </div>
+            </div>
+            <canvas id="game" width="900" height="260" aria-label="Chrome Dino clone"></canvas>
+        </div>
+
+    </main>
+
+    <script>
+        /*
+         * Bản dựng một file, lấy cảm hứng từ:
+         * - Chromium T-Rex Runner: components/neterror/resources
+         * - GitHub mirror: https://github.com/wayou/t-rex-runner
+         */
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const runnerImage = new Image();
+        runnerImage.src = "IMG_20260326_142958.jpg";
+
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+        const GROUND_Y = HEIGHT - 46;
+        const DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+
+        if (DPR > 1) {
+            canvas.width = WIDTH * DPR;
+            canvas.height = HEIGHT * DPR;
+            ctx.scale(DPR, DPR);
+            canvas.style.aspectRatio = WIDTH + " / " + HEIGHT;
+        }
+
+        const world = {
+            width: WIDTH,
+            height: HEIGHT,
+            groundY: GROUND_Y
+        };
+
+        const state = {
+            playing: false,
+            gameOver: false,
+            paused: false,
+            resumeUntil: 0,
+            score: 0,
+            hiScore: Number(localStorage.getItem("dino-hi-score") || 0),
+            distance: 0,
+            speed: 8.2,
+            spawnTimer: 0,
+            flashTimer: 0,
+            invert: false,
+            frame: 0
+        };
+
+        const cheat = {
+            god: false,
+            freeze: false,
+            autoJump: false,
+            slow: false,
+            fast: false,
+            jumpBoost: false,
+            theme: "auto"
+        };
+
+        const music = new Audio("SIUUU RONALDO SONG.mp3");
+        const gameOverSound = new Audio("SIUUUUUUUUUUUUUUUUUU!.mp3");
+        music.loop = true;
+        music.volume = 0.35;
+        let musicEnabled = true;
+
+
+        const loadingScreen = document.getElementById("loadingScreen");
+        const loadingBar = document.getElementById("loadingBar");
+        const loadingPercent = document.getElementById("loadingPercent");
+
+        function setLoadingProgress(value) {
+            const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
+            loadingBar.style.width = percent + "%";
+            loadingPercent.textContent = percent + "%";
+        }
+
+        function loadImage(image) {
+            return new Promise((resolve) => {
+                if (image.complete && image.naturalWidth > 0) {
+                    resolve();
+                    return;
+                }
+                const done = () => resolve();
+                image.addEventListener("load", done, { once: true });
+                image.addEventListener("error", done, { once: true });
+            });
+        }
+
+        function loadAudio(audio) {
+            return new Promise((resolve) => {
+                if (audio.readyState >= 2) {
+                    resolve();
+                    return;
+                }
+                const done = () => resolve();
+                audio.addEventListener("canplaythrough", done, { once: true });
+                audio.addEventListener("loadeddata", done, { once: true });
+                audio.addEventListener("error", done, { once: true });
+            });
+        }
+
+        async function preloadAssets() {
+            const assets = [
+                loadImage(runnerImage),
+                loadImage(backgroundPreload),
+                loadAudio(music),
+                loadAudio(gameOverSound)
+            ];
+            let loaded = 0;
+            setLoadingProgress(0);
+            await Promise.all(
+                assets.map(async (asset) => {
+                    await asset;
+                    loaded += 1;
+                    setLoadingProgress(loaded / assets.length);
+                })
+            );
+            loadingScreen.style.display = "none";
+        }
+
+
+        const baseJumpVelocity = -16.4;
+
+        function getSpeed() {
+            let scale = 1;
+            if (cheat.slow) scale *= 0.6;
+            if (cheat.fast) scale *= 1.6;
+            return state.speed * scale;
+        }
+
+        const runner = {
+            x: 70,
+            width: 44,
+            height: 48,
+            y: GROUND_Y - 48,
+            vy: 0,
+            gravity: 0.82,
+            jumpVelocity: baseJumpVelocity,
+            grounded: true,
+            frame: 0,
+            jump() {
+                if (!state.playing) {
+                    startGame();
+                }
+                if (this.grounded && !state.gameOver) {
+                    this.vy = this.jumpVelocity;
+                    this.grounded = false;
+                }
+            },
+            update() {
+                this.vy += this.gravity;
+                this.y += this.vy;
+
+                const floor = GROUND_Y - this.height;
+
+                if (this.y >= floor) {
+                    this.y = floor;
+                    this.vy = 0;
+                    this.grounded = true;
+                } else {
+                    this.grounded = false;
+                }
+
+                this.frame += getSpeed() * 0.06;
+            },
+            getBounds() {
+                return {
+                    x: this.x + 6,
+                    y: this.y + 4,
+                    width: this.width - 12,
+                    height: this.height - 6
+                };
+            },
+            draw() {
+                const width = this.width;
+                const height = this.height;
+                const x = this.x;
+                const y = this.y;
+                const color = getPalette().ink;
+                const legOffset = Math.sin(this.frame) > 0 ? 4 : -4;
+
+                if (runnerImage.complete && runnerImage.naturalWidth > 0) {
+                    ctx.drawImage(runnerImage, x, y, width, height);
+                    return;
+                }
+
+                ctx.fillStyle = color;
+
+                fillPixelRect(x + 16, y, 18, 18);
+                fillPixelRect(x + 30, y + 8, 8, 6);
+                fillPixelRect(x + 9, y + 16, 26, height - 16);
+                fillPixelRect(x + 2, y + 22, 9, 12);
+                fillPixelRect(x + width - 10, y + 22, 8, 8);
+
+                fillPixelRect(x + 14, y + height - 4, 8, 4);
+                fillPixelRect(x + 30 + legOffset, y + height - 4, 8, 4);
+
+                ctx.clearRect(x + 27, y + 4, 3, 3);
+            }
+        };
+
+        const horizon = {
+            lines: Array.from({ length: 22 }, (_, i) => ({
+                x: i * 58,
+                width: 36 + (i % 3) * 12,
+                y: GROUND_Y + (i % 2 === 0 ? 12 : 15)
+            })),
+            clouds: Array.from({ length: 4 }, (_, i) => ({
+                x: 180 + i * 190,
+                y: 24 + (i % 2) * 26,
+                speed: 0.7 + i * 0.1
+            })),
+            update() {
+                this.lines.forEach((line) => {
+                    line.x -= getSpeed();
+                    if (line.x + line.width < 0) {
+                        line.x = world.width + Math.random() * 50;
+                        line.width = 28 + Math.random() * 36;
+                    }
+                });
+
+                this.clouds.forEach((cloud) => {
+                    cloud.x -= cloud.speed;
+                    if (cloud.x < -90) {
+                        cloud.x = world.width + Math.random() * 120;
+                        cloud.y = 18 + Math.random() * 44;
+                    }
+                });
+            },
+            draw() {
+                const palette = getPalette();
+                ctx.strokeStyle = palette.ink;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, GROUND_Y + 2);
+                ctx.lineTo(world.width, GROUND_Y + 2);
+                ctx.stroke();
+
+                ctx.fillStyle = palette.ink;
+                this.lines.forEach((line) => {
+                    fillPixelRect(line.x, line.y, line.width, 3);
+                });
+
+                this.clouds.forEach((cloud) => drawCloud(cloud.x, cloud.y, palette.ink));
+            }
+        };
+
+        const obstacles = [];
+
+        function randomObstacle() {
+            const allowBird = state.score > 450 && Math.random() > 0.68;
+            if (allowBird) {
+                return {
+                    type: "bird",
+                    x: world.width + 20,
+                    y: [GROUND_Y - 74, GROUND_Y - 106, GROUND_Y - 48][Math.floor(Math.random() * 3)],
+                    width: 42,
+                    height: 28,
+                    frame: 0
+                };
+            }
+
+            const cluster = Math.random() > 0.7 ? 2 : 1;
+            const tall = Math.random() > 0.45;
+            const baseWidth = tall ? 22 : 16;
+            const baseHeight = tall ? 46 : 34;
+
+            return {
+                type: "cactus",
+                x: world.width + 20,
+                y: GROUND_Y - baseHeight,
+                width: cluster * baseWidth + (cluster - 1) * 10,
+                height: baseHeight,
+                cluster
+            };
+        }
+
+        function spawnObstacle() {
+            obstacles.push(randomObstacle());
+            state.spawnTimer = 72 + Math.random() * 42 - Math.min(getSpeed() * 2.4, 18);
+        }
+
+        function updateObstacles() {
+            if (cheat.freeze) {
+                return;
+            }
+            state.spawnTimer -= 1;
+            if (state.spawnTimer <= 0) {
+                spawnObstacle();
+            }
+
+            obstacles.forEach((obstacle) => {
+                obstacle.x -= getSpeed();
+                if (obstacle.type === "bird") {
+                    obstacle.frame += 0.18;
+                }
+            });
+
+            while (obstacles.length && obstacles[0].x + obstacles[0].width < -10) {
+                obstacles.shift();
+            }
+        }
+
+        function drawObstacles() {
+            const color = getPalette().ink;
+            ctx.fillStyle = color;
+
+            obstacles.forEach((obstacle) => {
+                if (obstacle.type === "cactus") {
+                    drawCactus(obstacle);
+                } else {
+                    drawBird(obstacle);
+                }
+            });
+        }
+
+        function collides(a, b) {
+            return (
+                a.x < b.x + b.width &&
+                a.x + a.width > b.x &&
+                a.y < b.y + b.height &&
+                a.y + a.height > b.y
+            );
+        }
+
+        function updateScore() {
+            state.distance += getSpeed() * 0.1;
+            state.score = Math.floor(state.distance);
+            if (state.score > state.hiScore) {
+                state.hiScore = state.score;
+                localStorage.setItem("dino-hi-score", String(state.hiScore));
+            }
+
+            if (state.score > 0 && state.score % 100 === 0 && state.flashTimer <= 0) {
+                state.flashTimer = 12;
+            }
+
+            if (cheat.theme === "auto") {
+                state.invert = Math.floor(state.score / 700) % 2 === 1;
+            }
+        }
+
+        function getPalette() {
+            return state.invert
+                ? {
+                    bg: "#111111",
+                    panel: "#1f1f1f",
+                    ink: "#ffffff",
+                    muted: "#f6ead7"
+                }
+                : {
+                    bg: "#ffffff",
+                    panel: "#ffffff",
+                    ink: "#fffdf7",
+                    muted: "#f3e7cf"
+                };
+        }
+
+        function fillPixelRect(x, y, width, height) {
+            ctx.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+        }
+
+        function drawCloud(x, y, color) {
+            ctx.fillStyle = color;
+            fillPixelRect(x, y + 8, 40, 14);
+            fillPixelRect(x + 8, y, 16, 12);
+            fillPixelRect(x + 18, y - 4, 16, 14);
+            fillPixelRect(x + 28, y + 2, 14, 12);
+        }
+
+        function drawCactus(obstacle) {
+            const { x, y, width, height, cluster } = obstacle;
+            const segmentWidth = cluster === 2 ? 22 : width;
+
+            for (let i = 0; i < cluster; i++) {
+                const offsetX = x + i * 30;
+                fillPixelRect(offsetX + 5, y, segmentWidth - 10, height);
+                fillPixelRect(offsetX, y + 14, 8, 12);
+                fillPixelRect(offsetX + segmentWidth - 8, y + 10, 8, 10);
+                fillPixelRect(offsetX - 2, y + 22, 6, 8);
+                fillPixelRect(offsetX + segmentWidth - 4, y + 18, 6, 10);
+            }
+        }
+
+        function drawBird(obstacle) {
+            const flap = Math.floor(obstacle.frame) % 2 === 0;
+            const x = obstacle.x;
+            const y = obstacle.y;
+
+            fillPixelRect(x + 10, y + 10, 18, 12);
+            fillPixelRect(x + 26, y + 6, 10, 8);
+            fillPixelRect(x + 34, y + 9, 8, 4);
+            fillPixelRect(x + 4, y + 12, 8, 6);
+            fillPixelRect(x + 18, y + 22, 6, 6);
+            fillPixelRect(x + 28, y + 22, 6, 6);
+
+            if (flap) {
+                fillPixelRect(x + 8, y + 4, 14, 6);
+                fillPixelRect(x + 18, y + 2, 16, 6);
+            } else {
+                fillPixelRect(x + 8, y + 16, 14, 6);
+                fillPixelRect(x + 18, y + 18, 16, 6);
+            }
+        }
+
+        function drawScore() {
+            const palette = getPalette();
+            const scoreText = String(state.score).padStart(5, "0");
+            const hiText = "HI " + String(state.hiScore).padStart(5, "0");
+            ctx.fillStyle = palette.ink;
+            ctx.font = "700 22px monospace";
+            ctx.textAlign = "right";
+
+            const blink = state.flashTimer > 0 && Math.floor(state.flashTimer / 2) % 2 === 0;
+            if (!blink) {
+                ctx.fillText(scoreText, world.width - 24, 34);
+            }
+            ctx.fillStyle = palette.muted;
+            ctx.fillText(hiText, world.width - 156, 34);
+        }
+
+        function drawMessages() {
+            const palette = getPalette();
+            ctx.textAlign = "center";
+            ctx.fillStyle = palette.ink;
+
+            if (!state.playing && !state.gameOver) {
+                ctx.font = "700 26px monospace";
+                ctx.fillText("PHULON SIUUUUUU", world.width / 2, 78);
+                ctx.font = "400 16px monospace";
+                if (state.paused) {
+                    const remaining = Math.max(0, Math.ceil((state.resumeUntil - performance.now()) / 1000));
+                    const display = remaining > 0 ? remaining : 1;
+                    ctx.fillText(`Resume sau ${display}...`, world.width / 2, 108);
+                } else {
+                    ctx.fillText("Nhấn Space hoặc Arrow Up để bắt đầu", world.width / 2, 108);
+                }
+            }
+
+            if (state.gameOver) {
+                ctx.font = "700 26px monospace";
+                ctx.fillText("PHULON SIUUUUUU", world.width / 2, 82);
+                ctx.font = "400 16px monospace";
+                ctx.fillText("Nhấn Enter hoặc Space để chơi lại", world.width / 2, 112);
+
+                ctx.strokeStyle = palette.ink;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(world.width / 2 - 26, 130, 52, 34);
+                ctx.beginPath();
+                ctx.moveTo(world.width / 2 - 10, 139);
+                ctx.lineTo(world.width / 2 - 10, 155);
+                ctx.lineTo(world.width / 2 + 8, 147);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, world.width, world.height);
+            horizon.draw();
+            drawObstacles();
+            runner.draw();
+            drawScore();
+            drawMessages();
+        }
+
+        function resetGame() {
+            state.playing = false;
+            state.gameOver = false;
+            state.score = 0;
+            state.distance = 0;
+            state.speed = 8.2;
+            state.spawnTimer = 60;
+            state.flashTimer = 0;
+            state.invert = false;
+            state.paused = false;
+            state.resumeUntil = 0;
+            obstacles.length = 0;
+
+            runner.y = GROUND_Y - runner.height;
+            runner.vy = 0;
+            runner.grounded = true;
+            runner.frame = 0;
+        }
+
+        function startGame() {
+            const wasGameOver = state.gameOver;
+            if (state.gameOver) {
+                resetGame();
+            }
+            state.playing = true;
+            state.paused = false;
+            if (musicEnabled) {
+                if (wasGameOver) {
+                    music.currentTime = 0;
+                }
+                music.play().catch(() => {});
+            }
+        }
+
+        function resumeGame() {
+            if (state.gameOver) {
+                startGame();
+                return;
+            }
+            state.playing = true;
+            state.paused = false;
+            if (musicEnabled) {
+                music.play().catch(() => {});
+            }
+        }
+
+        function pauseGame() {
+            if (state.playing && !state.gameOver) {
+                state.playing = false;
+                state.paused = true;
+                state.resumeUntil = 0;
+            }
+        }
+
+        function finishGame() {
+            state.gameOver = true;
+            state.playing = false;
+            state.paused = false;
+            state.resumeUntil = 0;
+            music.pause();
+            gameOverSound.currentTime = 0;
+            gameOverSound.play().catch(() => {});
+        }
+
+        function step() {
+            state.frame += 1;
+
+            if (cheat.theme === "day") {
+                state.invert = false;
+            } else if (cheat.theme === "night") {
+                state.invert = true;
+            }
+
+            if (state.paused && state.resumeUntil > 0) {
+                if (performance.now() >= state.resumeUntil) {
+                    state.resumeUntil = 0;
+                    resumeGame();
+                }
+            }
+
+            if (state.playing && !state.gameOver) {
+                horizon.update();
+                runner.update();
+                updateObstacles();
+                updateScore();
+                state.speed = Math.min(15.8, state.speed + 0.0018);
+
+                if (cheat.autoJump && runner.grounded && obstacles.length) {
+                    const nextObstacle = obstacles.find((obstacle) => obstacle.x + obstacle.width > runner.x);
+                    if (nextObstacle) {
+                        const distance = nextObstacle.x - runner.x;
+                        const threshold = 90 + getSpeed() * 7;
+                        if (distance > 0 && distance < threshold) {
+                            runner.jump();
+                        }
+                    }
+                }
+
+                if (!cheat.god) {
+                    const runnerBounds = runner.getBounds();
+                    for (const obstacle of obstacles) {
+                        const hitbox = {
+                            x: obstacle.x + 4,
+                            y: obstacle.y + 3,
+                            width: obstacle.width - 8,
+                            height: obstacle.height - 4
+                        };
+                        if (collides(runnerBounds, hitbox)) {
+                            finishGame();
+                            break;
+                        }
+                    }
+                }
+            } else {
+                runner.update();
+            }
+
+            if (state.flashTimer > 0) {
+                state.flashTimer -= 1;
+            }
+
+            drawScene();
+            requestAnimationFrame(step);
+        }
+
+        function onJumpInput() {
+            if (musicEnabled) {
+                music.play()
+                    .then(() => {
+                        if (!state.playing) {
+                            music.pause();
+                        }
+                    })
+                    .catch(() => {});
+            }
+            if (state.paused) {
+                if (state.resumeUntil === 0) {
+                    state.resumeUntil = performance.now() + 1500;
+                }
+                return;
+            }
+            if (state.gameOver) {
+                startGame();
+                runner.jump();
+                return;
+            }
+            runner.jump();
+        }
+
+        const cheatToggle = document.getElementById("cheatToggle");
+        const cheatPanel = document.getElementById("cheatPanel");
+        const musicToggle = document.getElementById("musicToggle");
+        const cheatGod = document.getElementById("cheatGod");
+        const cheatFreeze = document.getElementById("cheatFreeze");
+        const cheatAuto = document.getElementById("cheatAuto");
+        const cheatSlow = document.getElementById("cheatSlow");
+        const cheatFast = document.getElementById("cheatFast");
+        const cheatJump = document.getElementById("cheatJump");
+        const cheatTheme = document.getElementById("cheatTheme");
+
+        function applyCheatsFromUI() {
+            if (cheatSlow.checked && cheatFast.checked) {
+                cheatFast.checked = false;
+            }
+
+            cheat.god = cheatGod.checked;
+            cheat.freeze = cheatFreeze.checked;
+            cheat.autoJump = cheatAuto.checked;
+            cheat.slow = cheatSlow.checked;
+            cheat.fast = cheatFast.checked;
+            cheat.jumpBoost = cheatJump.checked;
+            cheat.theme = cheatTheme.value;
+            runner.jumpVelocity = baseJumpVelocity * (cheat.jumpBoost ? 1.25 : 1);
+        }
+
+        function updateMusicToggle() {
+            musicToggle.textContent = musicEnabled ? "Nhạc: Bật" : "Nhạc: Tắt";
+        }
+
+        cheatToggle.addEventListener("click", () => {
+            cheatPanel.classList.toggle("active");
+        });
+
+        musicToggle.addEventListener("click", () => {
+            musicEnabled = !musicEnabled;
+            if (!musicEnabled) {
+                music.pause();
+            } else if (state.playing && !state.gameOver) {
+                music.play().catch(() => {});
+            }
+            updateMusicToggle();
+        });
+
+        [cheatGod, cheatFreeze, cheatAuto, cheatSlow, cheatFast, cheatJump, cheatTheme]
+            .forEach((input) => {
+                input.addEventListener("change", applyCheatsFromUI);
+            });
+
+        window.addEventListener("keydown", (event) => {
+            if (event.code === "KeyC") {
+                cheatPanel.classList.toggle("active");
+                event.preventDefault();
+                return;
+            }
+
+            if (event.code === "Space" || event.code === "ArrowUp") {
+                onJumpInput();
+                event.preventDefault();
+                return;
+            }
+
+            if (event.code === "Enter" && state.gameOver) {
+                startGame();
+                event.preventDefault();
+            }
+
+            if (event.code === "Enter" && state.paused) {
+                onJumpInput();
+                event.preventDefault();
+            }
+        });
+
+        window.addEventListener("pointerdown", (event) => {
+            if (event.pointerType === "touch") {
+                onJumpInput();
+            }
+        });
+
+        window.addEventListener("touchstart", () => {
+            onJumpInput();
+        }, { passive: true });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                pauseGame();
+                music.pause();
+            }
+        });
+
+
+        applyCheatsFromUI();
+        updateMusicToggle();
+        resetGame();
+        drawScene();
+        requestAnimationFrame(step);
+    </script>
+</body>
+</html>
