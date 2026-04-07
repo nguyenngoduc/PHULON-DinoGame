@@ -430,6 +430,7 @@
             speed: 8.2,
             spawnTimer: 0,
             flashTimer: 0,
+            socialCreditTimer: 0,
             invert: false,
             frame: 0
         };
@@ -445,6 +446,7 @@
         };
 
         const music = new Audio("SIUUU RONALDO SONG.mp3");
+        const jumpSound = new Audio("SIUUUUUUUUUUUUUUUUUU!.mp3");
         const gameOverSound = new Audio("SIUUUUUUUUUUUUUUUUUU!.mp3");
         music.loop = true;
         music.volume = 0.35;
@@ -511,6 +513,7 @@
                 loadImage(runnerImage),
                 loadImage(backgroundPreload),
                 loadAudio(music),
+                loadAudio(jumpSound),
                 loadAudio(gameOverSound)
             ];
             let loaded = 0;
@@ -563,7 +566,10 @@
                 if (this.grounded && !state.gameOver) {
                     this.vy = this.jumpVelocity;
                     this.grounded = false;
+                    playJumpSound();
+                    return true;
                 }
+                return false;
             },
             update() {
                 this.vy += this.gravity;
@@ -674,7 +680,8 @@
                     y: [GROUND_Y - 74, GROUND_Y - 106, GROUND_Y - 48][Math.floor(Math.random() * 3)],
                     width: 42,
                     height: 28,
-                    frame: 0
+                    frame: 0,
+                    passed: false
                 };
             }
 
@@ -689,8 +696,20 @@
                 y: GROUND_Y - baseHeight,
                 width: cluster * baseWidth + (cluster - 1) * 10,
                 height: baseHeight,
-                cluster
+                cluster,
+                passed: false
             };
+        }
+
+        function triggerSocialCredit() {
+            state.socialCreditTimer = 44;
+        }
+
+        function playJumpSound() {
+            jumpSound.currentTime = 0;
+            jumpSound.volume = 0.75;
+            jumpSound.playbackRate = 0.85 + Math.random() * 0.35;
+            jumpSound.play().catch(() => {});
         }
 
         function spawnObstacle() {
@@ -711,6 +730,10 @@
                 obstacle.x -= getSpeed();
                 if (obstacle.type === "bird") {
                     obstacle.frame += 0.18;
+                }
+                if (!obstacle.passed && obstacle.x + obstacle.width < runner.x) {
+                    obstacle.passed = true;
+                    triggerSocialCredit();
                 }
             });
 
@@ -842,6 +865,15 @@
             ctx.textAlign = "center";
             ctx.fillStyle = palette.ink;
 
+            if (state.socialCreditTimer > 0) {
+                const life = state.socialCreditTimer / 44;
+                const y = 58 - (1 - life) * 16;
+                ctx.font = "700 24px monospace";
+                ctx.fillStyle = `rgba(170, 255, 170, ${Math.max(0.2, life)})`;
+                ctx.fillText("+1 Social Credit", world.width / 2, y);
+                ctx.fillStyle = palette.ink;
+            }
+
             if (!state.playing && !state.gameOver) {
                 ctx.font = "700 26px monospace";
                 ctx.fillText("PHULON SIUUUUUU", world.width / 2, 78);
@@ -890,6 +922,7 @@
             state.speed = 8.2;
             state.spawnTimer = 60;
             state.flashTimer = 0;
+            state.socialCreditTimer = 0;
             state.invert = false;
             state.paused = false;
             state.resumeUntil = 0;
@@ -1007,6 +1040,9 @@
 
             if (state.flashTimer > 0) {
                 state.flashTimer -= 1;
+            }
+            if (state.socialCreditTimer > 0) {
+                state.socialCreditTimer -= 1;
             }
 
             if (loadingDone) {
