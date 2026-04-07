@@ -194,9 +194,7 @@
         }
 
         .cheat-panel {
-            position: absolute;
-            top: 12px;
-            left: 12px;
+            position: relative;
             padding: 12px 14px;
             border-radius: 14px;
             background: rgba(255, 255, 255, 0.88);
@@ -205,7 +203,10 @@
             font-size: 12px;
             color: #25314f;
             display: none;
+            width: fit-content;
             min-width: 220px;
+            max-width: 100%;
+            margin: 10px 0 12px;
         }
 
         .cheat-panel.active {
@@ -274,9 +275,9 @@
             }
 
             .cheat-panel {
-                left: 8px;
-                right: 8px;
-                min-width: auto;
+                width: 100%;
+                min-width: 0;
+                margin: 10px 0;
             }
         }
 
@@ -348,41 +349,42 @@
             </div>
         </div>
 
-        <div class="game-frame">
-            <div class="cheat-panel" id="cheatPanel">
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatGod">
-                    <label for="cheatGod">Bất tử</label>
-                </div>
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatFreeze">
-                    <label for="cheatFreeze">Đóng băng chướng ngại</label>
-                </div>
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatAuto">
-                    <label for="cheatAuto">Auto nhảy</label>
-                </div>
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatSlow">
-                    <label for="cheatSlow">Slow motion</label>
-                </div>
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatFast">
-                    <label for="cheatFast">Tăng tốc</label>
-                </div>
-                <div class="cheat-row">
-                    <input type="checkbox" id="cheatJump">
-                    <label for="cheatJump">Nhảy cao</label>
-                </div>
-                <div class="cheat-row">
-                    <label for="cheatTheme">Chế độ</label>
-                    <select id="cheatTheme">
-                        <option value="auto">Auto</option>
-                        <option value="day">Ngày</option>
-                        <option value="night">Đêm</option>
-                    </select>
-                </div>
+        <div class="cheat-panel" id="cheatPanel">
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatGod">
+                <label for="cheatGod">Bất tử</label>
             </div>
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatFreeze">
+                <label for="cheatFreeze">Đóng băng chướng ngại</label>
+            </div>
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatAuto">
+                <label for="cheatAuto">Auto nhảy</label>
+            </div>
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatSlow">
+                <label for="cheatSlow">Slow motion</label>
+            </div>
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatFast">
+                <label for="cheatFast">Tăng tốc</label>
+            </div>
+            <div class="cheat-row">
+                <input type="checkbox" id="cheatJump">
+                <label for="cheatJump">Nhảy cao</label>
+            </div>
+            <div class="cheat-row">
+                <label for="cheatTheme">Chế độ</label>
+                <select id="cheatTheme">
+                    <option value="auto">Auto</option>
+                    <option value="day">Ngày</option>
+                    <option value="night">Đêm</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="game-frame">
             <canvas id="game" width="900" height="260" aria-label="Chrome Dino clone"></canvas>
         </div>
 
@@ -446,8 +448,12 @@
 
         const music = new Audio("SIUUU RONALDO SONG.mp3");
         const gameOverSound = new Audio("SIUUUUUUUUUUUUUUUUUU!.mp3");
+        const jumpSoundTemplate = new Audio("SIUUUUUUUUUUUUUUUUUU!.mp3");
         music.loop = true;
         music.volume = 0.35;
+        jumpSoundTemplate.preload = "auto";
+        const jumpSoundVolume = 0.5;
+        const jumpPitchRange = { min: 0.9, max: 1.2 };
         let musicEnabled = true;
 
 
@@ -511,7 +517,8 @@
                 loadImage(runnerImage),
                 loadImage(backgroundPreload),
                 loadAudio(music),
-                loadAudio(gameOverSound)
+                loadAudio(gameOverSound),
+                loadAudio(jumpSoundTemplate)
             ];
             let loaded = 0;
             setLoadingProgress(0);
@@ -539,6 +546,31 @@
 
         const baseJumpVelocity = -16.4;
 
+        function setPitchVariationEnabled(audio) {
+            if ("preservesPitch" in audio) {
+                audio.preservesPitch = false;
+            }
+            if ("mozPreservesPitch" in audio) {
+                audio.mozPreservesPitch = false;
+            }
+            if ("webkitPreservesPitch" in audio) {
+                audio.webkitPreservesPitch = false;
+            }
+        }
+
+        function playJumpSound() {
+            if (!musicEnabled) {
+                return;
+            }
+            const pitch =
+                jumpPitchRange.min + Math.random() * (jumpPitchRange.max - jumpPitchRange.min);
+            const jumpSound = jumpSoundTemplate.cloneNode(true);
+            jumpSound.volume = jumpSoundVolume;
+            jumpSound.playbackRate = pitch;
+            setPitchVariationEnabled(jumpSound);
+            jumpSound.play().catch(() => {});
+        }
+
         function getSpeed() {
             let scale = 1;
             if (cheat.slow) scale *= 0.6;
@@ -563,7 +595,9 @@
                 if (this.grounded && !state.gameOver) {
                     this.vy = this.jumpVelocity;
                     this.grounded = false;
+                    return true;
                 }
+                return false;
             },
             update() {
                 this.vy += this.gravity;
@@ -981,7 +1015,9 @@
                         const distance = nextObstacle.x - runner.x;
                         const threshold = 90 + getSpeed() * 7;
                         if (distance > 0 && distance < threshold) {
-                            runner.jump();
+                            if (runner.jump()) {
+                                playJumpSound();
+                            }
                         }
                     }
                 }
@@ -1018,15 +1054,6 @@
         }
 
         function onJumpInput() {
-            if (musicEnabled) {
-                music.play()
-                    .then(() => {
-                        if (!state.playing) {
-                            music.pause();
-                        }
-                    })
-                    .catch(() => {});
-            }
             if (state.paused) {
                 if (state.resumeUntil === 0) {
                     state.resumeUntil = performance.now() + 1500;
@@ -1035,10 +1062,14 @@
             }
             if (state.gameOver) {
                 startGame();
-                runner.jump();
+                if (runner.jump()) {
+                    playJumpSound();
+                }
                 return;
             }
-            runner.jump();
+            if (runner.jump()) {
+                playJumpSound();
+            }
         }
 
         const cheatToggle = document.getElementById("cheatToggle");
