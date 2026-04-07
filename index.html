@@ -707,7 +707,8 @@
 
         function playJumpSound() {
             jumpSound.currentTime = 0;
-            jumpSound.volume = 0.3 + Math.random() * 0.7;
+            jumpSound.volume = 0.75;
+            jumpSound.playbackRate = 0.85 + Math.random() * 0.35;
             jumpSound.play().catch(() => {});
         }
 
